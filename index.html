@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bandes dessinées</title>
+<meta property="og:title" content="Bandes dessinées">
+<meta property="og:description" content="Toutes les BD à lire en ligne.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2314171c'/%3E%3Ccircle cx='32' cy='32' r='24' fill='%238a2f25'/%3E%3Cpath d='M32 8a24 24 0 0 1 24 24H32zM32 56a24 24 0 0 1-24-24h24z' fill='%23e8e4d9'/%3E%3Ccircle cx='32' cy='32' r='24' fill='none' stroke='%23d9a441' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23d9a441' stroke='%2314171c' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --fond: #14171c; --carte: #1d2229; --carte2: #252b34; --bord: #343c48;
+    --texte: #e8e4d9; --doux: #9aa3af; --or: #d9a441;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.55 "Segoe UI", system-ui, sans-serif; }
+  a { color: var(--or); }
+  .haut { text-align: center; padding: 34px 16px 22px; border-bottom: 1px solid var(--bord); }
+  .haut a { font: 700 clamp(24px, 5vw, 38px)/1.15 Georgia, "Times New Roman", serif; color: var(--or); text-decoration: none; letter-spacing: .5px; }
+  .haut p { margin: 8px 0 0; color: var(--doux); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; min-height: 60vh; }
+  .vide { text-align: center; color: var(--doux); padding: 60px 0; }
+
+  /* Galerie */
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
+  .bd { display: block; background: var(--carte); border: 1px solid var(--bord); border-radius: 10px; overflow: hidden; color: inherit; text-decoration: none; transition: transform .15s, border-color .15s; }
+  .bd:hover, .bd:focus-visible { transform: translateY(-3px); border-color: var(--or); outline: none; }
+  .bd img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; background: #0d0f12; }
+  .bd .infos { padding: 12px 14px 14px; }
+  .bd h2 { font: 700 17px/1.3 Georgia, serif; margin: 0 0 4px; overflow-wrap: anywhere; }
+  .bd span { color: var(--doux); font-size: 13px; }
+  @media (max-width: 480px) { .grille { grid-template-columns: repeat(2, 1fr); gap: 12px; } .bd h2 { font-size: 15px; } }
+
+  /* Liseuse */
+  .lecture { max-width: 900px; margin: 0 auto; }
+  .retour { display: inline-block; margin-bottom: 14px; text-decoration: none; }
+  .lecture h1 { font: 700 clamp(22px, 4.5vw, 32px)/1.2 Georgia, serif; margin: 0 0 4px; overflow-wrap: anywhere; }
+  .lecture .meta { color: var(--doux); font-size: 14px; margin: 0 0 12px; }
+  .lecture .texte { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 20px; }
+  .planches img { display: block; width: 100%; height: auto; margin: 0 0 10px; background: #0d0f12; border-radius: 4px; }
+  .suite { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .suite a { flex: 1; min-width: 200px; background: var(--carte); border: 1px solid var(--bord); border-radius: 10px; padding: 12px 14px; text-decoration: none; color: inherit; }
+  .suite a:hover { border-color: var(--or); }
+  .suite small { display: block; color: var(--doux); }
+  .suite .droite { text-align: right; }
+  footer { text-align: center; padding: 18px; border-top: 1px solid var(--bord); font-size: 13px; }
+  footer a { color: var(--doux); }
+</style>
+</head>
+<body>
+<header class="haut">
+  <a href="#/" id="titreSite">Bandes dessinées</a>
+  <p id="sousTitre"></p>
+</header>
+<main id="vue"><p class="vide">Chargement…</p></main>
+<footer><a href="publier.html">Espace auteur</a></footer>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let donnees = { site: {}, bd: [] };
+let titreSite = "Bandes dessinées";
+
+function el(balise, classe, texte) {
+  const e = document.createElement(balise);
+  if (classe) e.className = classe;
+  if (texte !== undefined) e.textContent = texte;
+  return e;
+}
+const chemin = (bd, page) => "bd/" + encodeURIComponent(bd.id) + "/" + encodeURIComponent(typeof page === "string" ? page : page.f);
+const dateLisible = (d) => { const x = new Date(d); return isNaN(x) ? "" : x.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); };
+const nbPages = (bd) => bd.pages.length + " page" + (bd.pages.length > 1 ? "s" : "");
+
+function galerie() {
+  document.title = titreSite;
+  const vue = $("vue"); vue.textContent = "";
+  if (!donnees.bd.length) { vue.append(el("p", "vide", "Aucune BD publiée pour l'instant. Reviens bientôt !")); return; }
+  const grille = el("div", "grille");
+  donnees.bd.forEach((bd) => {
+    const a = el("a", "bd"); a.href = "#/" + encodeURIComponent(bd.id);
+    const img = el("img"); img.src = chemin(bd, bd.pages[0]); img.alt = ""; img.loading = "lazy";
+    const infos = el("div", "infos");
+    infos.append(el("h2", "", bd.titre), el("span", "", [dateLisible(bd.date), nbPages(bd)].filter(Boolean).join(" · ")));
+    a.append(img, infos); grille.append(a);
+  });
+  vue.append(grille);
+}
+
+function lecteur(bd) {
+  document.title = bd.titre + " — " + titreSite;
+  const vue = $("vue"); vue.textContent = "";
+  const boite = el("div", "lecture");
+  const retour = el("a", "retour", "← Toutes les BD"); retour.href = "#/";
+  boite.append(retour, el("h1", "", bd.titre), el("p", "meta", [dateLisible(bd.date), nbPages(bd)].filter(Boolean).join(" · ")));
+  if (bd.texte) boite.append(el("p", "texte", bd.texte));
+
+  const planches = el("div", "planches");
+  bd.pages.forEach((p, i) => {
+    const img = el("img"); img.alt = "Page " + (i + 1);
+    if (i > 1) img.loading = "lazy";
+    if (p && p.w && p.h) { img.width = p.w; img.height = p.h; }   // réserve la place avant le chargement
+    img.src = chemin(bd, p);
+    planches.append(img);
+  });
+  boite.append(planches);
+
+  // La liste va de la plus récente à la plus ancienne.
+  const i = donnees.bd.indexOf(bd);
+  const ancienne = donnees.bd[i + 1], recente = donnees.bd[i - 1];
+  if (ancienne || recente) {
+    const suite = el("nav", "suite");
+    const lien = (cible, etiquette, classe) => {
+      const a = el("a", classe); a.href = "#/" + encodeURIComponent(cible.id);
+      a.append(el("small", "", etiquette), document.createTextNode(cible.titre)); return a;
+    };
+    if (ancienne) suite.append(lien(ancienne, "← BD précédente", ""));
+    if (recente) suite.append(lien(recente, "BD suivante →", "droite"));
+    boite.append(suite);
+  }
+  vue.append(boite);
+}
+
+function route() {
+  const m = /^#\/(.+)$/.exec(location.hash);
+  let id = "";
+  try { id = m ? decodeURIComponent(m[1]) : ""; } catch {}
+  const bd = id && donnees.bd.find((b) => b.id === id);
+  if (bd) lecteur(bd); else galerie();
+  window.scrollTo(0, 0);
+}
+
+async function demarrer() {
+  try {
+    const rep = await fetch("bd/index.json?t=" + Date.now(), { cache: "no-store" });
+    if (rep.ok) {
+      const d = await rep.json();
+      donnees = { site: d.site || {}, bd: (d.bd || []).filter((b) => b && b.id && Array.isArray(b.pages) && b.pages.length) };
+    }
+  } catch {}
+  titreSite = donnees.site.titre || titreSite;
+  $("titreSite").textContent = titreSite;
+  $("sousTitre").textContent = donnees.site.sousTitre || "";
+  route();
+}
+window.addEventListener("hashchange", route);
+demarrer();
+</script>
+</body>
+</html>

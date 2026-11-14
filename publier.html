@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Publier une BD</title>
+<link rel="icon" id="icone" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2314171c'/%3E%3Ccircle cx='32' cy='32' r='24' fill='%238a2f25'/%3E%3Cpath d='M32 8a24 24 0 0 1 24 24H32zM32 56a24 24 0 0 1-24-24h24z' fill='%23e8e4d9'/%3E%3Ccircle cx='32' cy='32' r='24' fill='none' stroke='%23d9a441' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23d9a441' stroke='%2314171c' stroke-width='2'/%3E%3C/svg%3E">
+<script>
+  // Icône personnalisée : si un fichier « icone.png » est posé à côté de ce fichier, il remplace le bouclier.
+  (function () { var i = new Image(); i.onload = function () { var l = document.getElementById("icone"); l.type = "image/png"; l.href = "icone.png"; }; i.src = "icone.png"; })();
+</script>
+<style>
+  :root {
+    --fond: #14171c; --carte: #1d2229; --carte2: #252b34; --bord: #343c48;
+    --texte: #e8e4d9; --doux: #9aa3af; --or: #d9a441; --or-fonce: #b07f24;
+    --rouge: #d9604a; --vert: #6fbf73;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  .page { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  h1 { font: 700 26px/1.2 Georgia, "Times New Roman", serif; color: var(--or); margin: 0; letter-spacing: .5px; }
+  h2 { font-size: 17px; margin: 0 0 10px; }
+  h3 { font-size: 15px; margin: 18px 0 10px; color: var(--or); border-top: 1px solid var(--bord); padding-top: 14px; }
+  h3:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+  label { display: block; font-weight: 600; margin: 0 0 6px; }
+  .aide { color: var(--doux); font-size: 14px; margin: 4px 0 0; }
+  input[type=text], input[type=url], input[type=password], textarea {
+    width: 100%; background: var(--carte2); color: var(--texte);
+    border: 1px solid var(--bord); border-radius: 8px; padding: 10px 12px; font: inherit;
+  }
+  input:focus, textarea:focus { outline: 2px solid var(--or); outline-offset: 0; border-color: transparent; }
+  textarea { min-height: 90px; resize: vertical; }
+  .champ { margin-bottom: 14px; }
+  .compteur { float: right; font-weight: 400; color: var(--doux); font-size: 13px; }
+  .compteur.trop { color: var(--rouge); font-weight: 700; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px;
+    border: 1px solid var(--bord); background: var(--carte2); color: var(--texte); padding: 9px 14px;
+  }
+  button:hover:not(:disabled) { border-color: var(--or); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.principal { background: var(--or); color: #1b1404; border-color: var(--or-fonce); font-size: 18px; padding: 13px 26px; width: 100%; }
+  button.principal:hover:not(:disabled) { background: #e6b658; }
+  button.moyen { background: var(--or); color: #1b1404; border-color: var(--or-fonce); }
+  #zone { border: 2px dashed var(--bord); border-radius: 10px; padding: 28px 16px; text-align: center; color: var(--doux); cursor: pointer; transition: .15s; }
+  #zone.survol, #zone:hover { border-color: var(--or); color: var(--texte); background: var(--carte2); }
+  #zone strong { color: var(--texte); display: block; font-size: 17px; margin-bottom: 4px; }
+  #pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 14px; }
+  .vignette { background: var(--carte2); border: 1px solid var(--bord); border-radius: 8px; overflow: hidden; }
+  .vignette img { display: block; width: 100%; height: 170px; object-fit: contain; background: #0d0f12; }
+  .vignette .bas { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; font-size: 13px; color: var(--doux); }
+  .vignette .bas button { padding: 2px 7px; font-size: 13px; }
+  .suppr:hover:not(:disabled) { border-color: var(--rouge); color: var(--rouge); }
+  .resume { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--doux); font-size: 14px; gap: 10px; flex-wrap: wrap; }
+  #etat { margin-top: 12px; min-height: 24px; overflow-wrap: anywhere; }
+  #etat.ok { color: var(--vert); }
+  #etat.erreur { color: var(--rouge); }
+  progress { width: 100%; height: 10px; margin-top: 8px; accent-color: var(--or); }
+  .cache { display: none !important; }
+  .connexion { font-size: 14px; color: var(--doux); margin-top: 0; }
+  .connexion b { color: var(--vert); }
+  a { color: var(--or); }
+  ul.histo { list-style: none; padding: 0; margin: 0; }
+  ul.histo li { padding: 8px 0; border-top: 1px solid var(--bord); font-size: 14px; }
+  ul.histo li:first-child { border-top: 0; }
+  ul.histo span { color: var(--doux); white-space: nowrap; }
+  .hligne { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hligne > :first-child { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
+  .hactions { display: flex; gap: 6px; }
+  .hactions button { padding: 4px 10px; font-size: 13px; }
+  .hform { display: grid; gap: 8px; margin-top: 10px; }
+  .hform textarea { min-height: 70px; }
+  .hform button { justify-self: start; }
+  ol.etapes { margin: 6px 0 8px; padding-left: 22px; color: var(--doux); font-size: 14px; }
+  .case { display: flex; gap: 8px; align-items: center; font-weight: 400; margin-top: 10px; }
+  .destinations { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+  .destinations .case { margin-top: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Publier une BD</h1>
+    <button id="btnReglages" title="Réglages">⚙ Réglages</button>
+  </header>
+
+  <!-- Réglages -->
+  <section class="carte cache" id="reglages">
+    <h2>Réglages</h2>
+
+    <h3>Discord</h3>
+    <div class="champ">
+      <label for="webhook">Adresse du webhook Discord</label>
+      <input type="url" id="webhook" placeholder="https://discord.com/api/webhooks/…" autocomplete="off" spellcheck="false">
+      <ol class="etapes">
+        <li>Dans Discord : clic droit sur le salon → <b>Modifier le salon</b></li>
+        <li><b>Intégrations</b> → <b>Webhooks</b> → <b>Nouveau webhook</b></li>
+        <li><b>Copier l'URL du webhook</b>, puis la coller ci-dessus</li>
+      </ol>
+    </div>
+    <div class="champ">
+      <label for="role">Rôle à notifier à chaque publication <span class="compteur">facultatif</span></label>
+      <input type="text" id="role" placeholder="Identifiant du rôle (ex. 123456789012345678)" inputmode="numeric" autocomplete="off">
+    </div>
+
+    <h3>Site des BD (GitHub)</h3>
+    <div class="champ">
+      <label for="depot">Dépôt GitHub du site</label>
+      <input type="text" id="depot" placeholder="pseudo/bd" autocomplete="off" spellcheck="false" autocapitalize="off">
+      <p class="aide">Sous la forme <b>pseudo/nom-du-dépôt</b>. Rempli automatiquement quand cette page est ouverte depuis le site.</p>
+    </div>
+    <div class="champ">
+      <label for="jeton">Clé d'accès GitHub</label>
+      <input type="password" id="jeton" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+      <ol class="etapes">
+        <li>Sur GitHub : photo de profil → <b>Settings</b> → <b>Developer settings</b></li>
+        <li><b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b></li>
+        <li><b>Repository access</b> : « Only select repositories », choisir le dépôt du site</li>
+        <li><b>Permissions</b> → Repository → <b>Contents : Read and write</b></li>
+        <li>Générer, copier la clé et la coller ci-dessus</li>
+      </ol>
+    </div>
+    <div class="champ">
+      <label for="siteTitre">Titre du site</label>
+      <input type="text" id="siteTitre" maxlength="80" placeholder="Ex. : Valheim — Entre croix et corbeaux">
+    </div>
+    <div class="champ">
+      <label for="siteSous">Sous-titre du site <span class="compteur">facultatif</span></label>
+      <input type="text" id="siteSous" maxlength="140">
+    </div>
+    <label class="case"><input type="checkbox" id="couvSeule"> Sur Discord, n'envoyer que la première page et le lien vers le site</label>
+
+    <p class="aide" style="margin-top:14px">Le webhook et la clé restent enregistrés sur cet appareil uniquement. Ne les partage pas : ils permettent de publier.</p>
+    <p style="margin:14px 0 0"><button id="btnEnregistrer" class="moyen">Enregistrer les réglages</button></p>
+    <div id="etatReglages" class="aide" style="min-height:22px;margin-top:8px"></div>
+  </section>
+
+  <!-- Formulaire -->
+  <section class="carte" id="formulaire">
+    <p class="connexion" id="connexion"></p>
+
+    <div class="champ">
+      <label for="titre">Titre <span class="compteur" id="cTitre">0 / 100</span></label>
+      <input type="text" id="titre" maxlength="100" placeholder="Ex. : Épisode 12 — Le troll de la Forêt Noire">
+    </div>
+
+    <div class="champ">
+      <label for="texte">Texte <span class="compteur" id="cTexte">0 / 1700</span></label>
+      <textarea id="texte" placeholder="Quelques mots pour présenter la BD (facultatif)"></textarea>
+    </div>
+
+    <div class="champ">
+      <label>Pages de la BD</label>
+      <div id="zone" tabindex="0" role="button">
+        <strong>Glisse ton PDF ou tes images ici</strong>
+        ou touche pour choisir des fichiers (PDF, JPG, PNG, WEBP, GIF)
+      </div>
+      <input type="file" id="fichiers" class="cache" multiple accept=".pdf,application/pdf,image/png,image/jpeg,image/webp,image/gif">
+      <div id="pages"></div>
+      <div class="resume cache" id="resume">
+        <span id="resumeTexte"></span>
+        <button id="btnVider">Tout enlever</button>
+      </div>
+      <label class="case cache" id="casePdf"><input type="checkbox" id="joindrePdf"> Joindre aussi le PDF d'origine sur Discord</label>
+    </div>
+
+    <div class="destinations cache" id="destinations">
+      <label class="case"><input type="checkbox" id="optSite" checked> Publier sur le site</label>
+      <label class="case"><input type="checkbox" id="optDiscord" checked> Publier sur Discord</label>
+    </div>
+
+    <button class="principal" id="btnPublier" disabled>Publier</button>
+    <progress id="barre" class="cache" value="0" max="1"></progress>
+    <div id="etat"></div>
+  </section>
+
+  <section class="carte cache" id="carteHisto">
+    <h2>BD publiées</h2>
+    <p class="aide" id="aideHisto" style="margin:0 0 8px"></p>
+    <ul class="histo" id="histo"></ul>
+    <div id="etatHisto" class="aide" style="min-height:22px;margin-top:8px"></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+"use strict";
+
+/* ---------- Constantes ---------- */
+const MAX_FICHIER = 8 * 1024 * 1024;      // marge sous la limite Discord (10 Mo par fichier)
+const MAX_ENVOI = 20 * 1024 * 1024;       // taille totale visée par message Discord
+const MAX_PAR_MESSAGE = 10;               // limite Discord : 10 fichiers par message
+const MAX_TEXTE = 1700;
+const LARGEUR_PDF = 1700;                 // largeur de rendu des pages PDF, en pixels
+const RE_WEBHOOK = /^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
+const RE_DEPOT = /^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/;
+const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const GH_API = "https://api.github.com";
+
+/* ---------- Stockage local (toujours protégé) ---------- */
+const memoire = {
+  lire(cle, defaut) { try { const v = localStorage.getItem(cle); return v === null ? defaut : JSON.parse(v); } catch { return defaut; } },
+  ecrire(cle, v) { try { localStorage.setItem(cle, JSON.stringify(v)); } catch {} },
+};
+
+// Quand la page est servie par GitHub Pages, le dépôt se déduit de l'adresse.
+function depotDetecte() {
+  const h = location.hostname.toLowerCase();
+  if (!h.endsWith(".github.io")) return "";
+  const pseudo = h.split(".")[0];
+  const seg = location.pathname.split("/").filter(Boolean);
+  const depot = seg.length && !/\.html?$/i.test(seg[0]) ? seg[0] : h;
+  return pseudo + "/" + depot;
+}
+
+/* ---------- État ---------- */
+const etat = {
+  pages: [],        // { id, blob, ext, url, w, h }
+  pdfs: [],         // fichiers PDF d'origine
+  occupe: false,
+  webhook: memoire.lire("bd_webhook", ""),
+  infos: memoire.lire("bd_infos", null),   // { nom, guild, salon }
+  role: memoire.lire("bd_role", ""),
+  forum: memoire.lire("bd_forum", null),   // true / false / null (inconnu)
+  depot: memoire.lire("bd_depot", ""),
+  jeton: memoire.lire("bd_jeton", ""),
+  couvSeule: memoire.lire("bd_couv", false),
+  liste: [],        // BD affichées dans « BD publiées »
+  edition: "",      // clé de la BD en cours de modification
+};
+let compteurId = 0;
+
+const $ = (id) => document.getElementById(id);
+const siteActif = () => !!(etat.depot && etat.jeton);
+const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function urlSite() {
+  const [pseudo, depot] = etat.depot.split("/");
+  return depot.toLowerCase() === pseudo.toLowerCase() + ".github.io"
+    ? "https://" + pseudo.toLowerCase() + ".github.io/"
+    : "https://" + pseudo.toLowerCase() + ".github.io/" + depot + "/";
+}
+function idWebhook() {
+  const m = /\/webhooks\/(\d+)\//.exec(etat.webhook || "");
+  return m ? m[1] : "";
+}
+
+/* ---------- Affichage ---------- */
+function message(texte, type) {
+  const e = $("etat");
+  e.className = type || "";
+  e.textContent = "";
+  if (texte instanceof Node) e.appendChild(texte); else e.textContent = texte || "";
+}
+function infoHisto(texte, type) {
+  const e = $("etatHisto"); e.textContent = texte || "";
+  e.style.color = type === "erreur" ? "var(--rouge)" : type === "ok" ? "var(--vert)" : "";
+}
+function tailleLisible(o) {
+  return o < 1024 * 1024 ? Math.max(1, Math.round(o / 1024)) + " Ko" : (o / 1024 / 1024).toFixed(1).replace(".", ",") + " Mo";
+}
+function lienVers(url, texte) {
+  const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = texte; return a;
+}
+
+function majConnexion() {
+  const c = $("connexion"); c.textContent = "";
+  const morceaux = [];
+  if (siteActif()) morceaux.push(["Site ", etat.depot]);
+  if (etat.webhook && etat.infos) morceaux.push(["Discord ", etat.infos.nom || "webhook"]);
+  if (!morceaux.length) { c.textContent = "Rien n'est configuré : ouvre les Réglages pour brancher Discord, le site, ou les deux."; }
+  morceaux.forEach((m, i) => {
+    if (i) c.append(" · ");
+    c.append(m[0]); const b = document.createElement("b"); b.textContent = m[1]; c.append(b);
+  });
+  $("destinations").classList.toggle("cache", !(siteActif() && etat.webhook));
+  $("aideHisto").textContent = siteActif()
+    ? "Les BD du site. Tu peux en corriger le titre et le texte, ou les supprimer (du site et de Discord)."
+    : "Les BD publiées depuis cet appareil. Tu peux en corriger le titre et le texte, ou les supprimer de Discord.";
+}
+
+function destinations() {
+  const deux = siteActif() && !!etat.webhook;
+  return {
+    site: siteActif() && (!deux || $("optSite").checked),
+    discord: !!etat.webhook && (!deux || $("optDiscord").checked),
+  };
+}
+
+function majBouton() {
+  const titre = $("titre").value.trim();
+  const texte = $("texte").value;
+  $("cTitre").textContent = titre.length + " / 100";
+  $("cTexte").textContent = texte.length + " / " + MAX_TEXTE;
+  $("cTexte").classList.toggle("trop", texte.length > MAX_TEXTE);
+  const d = destinations();
+  $("btnPublier").disabled = etat.occupe || !(d.site || d.discord) || !titre || !etat.pages.length || texte.length > MAX_TEXTE;
+  $("btnPublier").textContent = d.site && d.discord ? "Publier sur le site et sur Discord" : d.site ? "Publier sur le site" : d.discord ? "Publier sur Discord" : "Publier";
+}
+
+function majPages() {
+  const conteneur = $("pages");
+  conteneur.textContent = "";
+  etat.pages.forEach((p, i) => {
+    const v = document.createElement("div"); v.className = "vignette";
+    const img = document.createElement("img"); img.src = p.url; img.alt = "Page " + (i + 1);
+    const bas = document.createElement("div"); bas.className = "bas";
+    const num = document.createElement("span"); num.textContent = "Page " + (i + 1);
+    const actions = document.createElement("span");
+    const mk = (txt, titre, fn, cls) => {
+      const b = document.createElement("button"); b.textContent = txt; b.title = titre; if (cls) b.className = cls;
+      b.disabled = etat.occupe; b.onclick = fn; return b;
+    };
+    actions.append(
+      mk("◀", "Avancer cette page", () => deplacer(i, -1)),
+      mk("▶", "Reculer cette page", () => deplacer(i, 1)),
+      mk("✕", "Enlever cette page", () => enlever(i), "suppr"),
+    );
+    bas.append(num, actions); v.append(img, bas); conteneur.append(v);
+  });
+  const total = etat.pages.reduce((s, p) => s + p.blob.size, 0);
+  $("resume").classList.toggle("cache", !etat.pages.length);
+  $("resumeTexte").textContent = etat.pages.length + " page" + (etat.pages.length > 1 ? "s" : "") + " · " + tailleLisible(total);
+  $("casePdf").classList.toggle("cache", !(etat.webhook && etat.pdfs.some((f) => f.size <= MAX_FICHIER)));
+  majBouton();
+}
+
+function deplacer(i, sens) {
+  const j = i + sens;
+  if (j < 0 || j >= etat.pages.length) return;
+  [etat.pages[i], etat.pages[j]] = [etat.pages[j], etat.pages[i]];
+  majPages();
+}
+function enlever(i) {
+  URL.revokeObjectURL(etat.pages[i].url);
+  etat.pages.splice(i, 1);
+  if (!etat.pages.length) etat.pdfs = [];
+  majPages();
+}
+function vider() {
+  etat.pages.forEach((p) => URL.revokeObjectURL(p.url));
+  etat.pages = []; etat.pdfs = [];
+  $("joindrePdf").checked = false;
+  majPages();
+}
+
+function occuper(oui) {
+  etat.occupe = oui;
+  ["btnVider", "btnEnregistrer", "titre", "texte", "joindrePdf", "optSite", "optDiscord"].forEach((id) => { $(id).disabled = oui; });
+  majPages(); rendreHisto();
+}
+
+/* ---------- Préparation des images ---------- */
+function canvasVersBlob(canvas, qualite) {
+  return new Promise((ok, ko) => canvas.toBlob((b) => b ? ok(b) : ko(new Error("Conversion d'image impossible")), "image/jpeg", qualite));
+}
+
+// Réduit une image jusqu'à passer sous la limite de taille.
+async function compresser(source, largeur, hauteur) {
+  let echelle = Math.min(1, 3000 / Math.max(largeur, hauteur));
+  let qualite = 0.9;
+  for (let essai = 0; essai < 8; essai++) {
+    const c = document.createElement("canvas");
+    c.width = Math.round(largeur * echelle); c.height = Math.round(hauteur * echelle);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(source, 0, 0, c.width, c.height);
+    const blob = await canvasVersBlob(c, qualite);
+    if (blob.size <= MAX_FICHIER) return blob;
+    if (qualite > 0.7) qualite -= 0.1; else echelle *= 0.8;
+  }
+  throw new Error("image trop lourde, même après compression");
+}
+
+function extension(fichier) {
+  const m = /\.([a-z0-9]+)$/i.exec(fichier.name || "");
+  if (m) return m[1].toLowerCase() === "jpeg" ? "jpg" : m[1].toLowerCase();
+  return ({ "image/png": "png", "image/webp": "webp", "image/gif": "gif" })[fichier.type] || "jpg";
+}
+
+async function preparerImage(fichier) {
+  let bitmap;
+  try { bitmap = await createImageBitmap(fichier); } catch { throw new Error("image illisible"); }
+  const w = bitmap.width, h = bitmap.height;
+  try {
+    if (fichier.size <= MAX_FICHIER) return { blob: fichier, ext: extension(fichier), w, h };
+    return { blob: await compresser(bitmap, w, h), ext: "jpg", w, h };
+  } finally { bitmap.close && bitmap.close(); }
+}
+
+async function preparerPdf(fichier, surPage) {
+  if (!window.pdfjsLib) throw new Error("le lecteur de PDF n'a pas pu se charger (connexion Internet requise)");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const doc = await pdfjsLib.getDocument({ data: await fichier.arrayBuffer() }).promise;
+  const sorties = [];
+  try {
+    for (let n = 1; n <= doc.numPages; n++) {
+      surPage(n, doc.numPages);
+      const page = await doc.getPage(n);
+      const base = page.getViewport({ scale: 1 });
+      const echelle = Math.min(4, LARGEUR_PDF / base.width, 2600 / base.height);
+      const vue = page.getViewport({ scale: echelle });
+      const c = document.createElement("canvas");
+      c.width = Math.round(vue.width); c.height = Math.round(vue.height);
+      // intent "print" : le rendu continue même si la fenêtre passe en arrière-plan
+      await page.render({ canvasContext: c.getContext("2d"), viewport: vue, intent: "print" }).promise;
+      let blob = await canvasVersBlob(c, 0.9);
+      if (blob.size > MAX_FICHIER) blob = await compresser(c, c.width, c.height);
+      sorties.push({ blob, ext: "jpg", w: c.width, h: c.height });
+      page.cleanup();
+    }
+  } finally { doc.destroy(); }
+  return sorties;
+}
+
+const estPdf = (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
+const estImage = (f) => /^image\/(png|jpeg|webp|gif)$/.test(f.type) || /\.(png|jpe?g|webp|gif)$/i.test(f.name || "");
+
+async function ajouterFichiers(liste) {
+  if (etat.occupe) return;
+  const fichiers = Array.from(liste)
+    .filter((f) => estPdf(f) || estImage(f))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr", { numeric: true }));
+  if (!fichiers.length) { message("Aucun fichier utilisable : dépose un PDF ou des images.", "erreur"); return; }
+  occuper(true);
+  const erreurs = [];
+  const ajouter = (p) => etat.pages.push(Object.assign({ id: ++compteurId, url: URL.createObjectURL(p.blob) }, p));
+  for (const f of fichiers) {
+    try {
+      if (estPdf(f)) {
+        (await preparerPdf(f, (n, total) => message("Conversion de « " + f.name + " » : page " + n + " sur " + total + "…"))).forEach(ajouter);
+        etat.pdfs.push(f);
+      } else {
+        message("Préparation de « " + f.name + " »…");
+        ajouter(await preparerImage(f));
+      }
+    } catch (e) {
+      erreurs.push("« " + f.name + " » : " + (e && e.name === "PasswordException" ? "PDF protégé par mot de passe" : (e && e.message) || "fichier illisible"));
+    }
+    majPages();
+  }
+  occuper(false);
+  message(erreurs.length ? "Fichiers ignorés — " + erreurs.join(" ; ") : "", erreurs.length ? "erreur" : "");
+}
+
+/* ---------- Discord ---------- */
+function decouper(pages) {
+  const lots = []; let lot = [], taille = 0;
+  for (const p of pages) {
+    if (lot.length && (lot.length >= MAX_PAR_MESSAGE || taille + p.blob.size > MAX_ENVOI)) { lots.push(lot); lot = []; taille = 0; }
+    lot.push(p); taille += p.blob.size;
+  }
+  if (lot.length) lots.push(lot);
+  return lots;
+}
+
+function nomDeFichier(titre) {
+  return (titre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "")) || "bd";
+}
+
+class ErreurDiscord extends Error {
+  constructor(statut, corps) { super((corps && corps.message) || "Erreur Discord " + statut); this.statut = statut; this.code = corps && corps.code; }
+}
+
+async function envoyer(charge, fichiers, filId) {
+  const url = etat.webhook + "?wait=true" + (filId ? "&thread_id=" + filId : "");
+  for (let essai = 0; essai < 5; essai++) {
+    const fd = new FormData();
+    fd.append("payload_json", JSON.stringify(charge));
+    fichiers.forEach((f, i) => fd.append("files[" + i + "]", f.blob, f.nom));
+    let rep;
+    try { rep = await fetch(url, { method: "POST", body: fd }); }
+    catch { throw new Error("Connexion à Discord impossible : vérifie ta connexion Internet"); }
+    if (rep.ok) return rep.json();
+    let corps = null; try { corps = await rep.json(); } catch {}
+    if (rep.status === 429) { await attendre(((corps && corps.retry_after) || 2) * 1000 + 250); continue; }
+    throw new ErreurDiscord(rep.status, corps);
+  }
+  throw new Error("Discord est surchargé, réessaie dans une minute");
+}
+
+// Envoie un lot ; s'il est refusé pour sa taille, le coupe en deux.
+async function envoyerLot(charge, fichiers, filId) {
+  try { return [await envoyer(charge, fichiers, filId)]; }
+  catch (e) {
+    if (!(e instanceof ErreurDiscord) || (e.statut !== 413 && e.code !== 40005) || fichiers.length < 2) throw e;
+    const milieu = Math.ceil(fichiers.length / 2);
+    const a = await envoyerLot(charge, fichiers.slice(0, milieu), filId);
+    const suite = Object.assign({}, charge, { content: "" }); delete suite.thread_name;
+    const fil = filId || (charge.thread_name ? a[0].channel_id : null);
+    return a.concat(await envoyerLot(suite, fichiers.slice(milieu), fil));
+  }
+}
+
+// Texte du premier message Discord. Dans un Forum, le titre est celui du post.
+function contenuDiscord(forum, mention, titre, texte, lienSite) {
+  let c = forum ? texte : "# " + titre + (texte ? "\n" + texte : "");
+  if (lienSite) c += (c ? "\n\n" : "") + "📖 Lire sur le site : <" + lienSite + ">";
+  return ((mention || "") + c).trim();
+}
+
+// Publie sur Discord et remplit « d » au fur et à mesure (pour pouvoir annuler en cas d'échec).
+async function publierSurDiscord(d, titre, texte, lots, pdfs, base, lienSite, etape) {
+  const mentions = d.mention ? { parse: [], roles: [etat.role] } : { parse: [] };
+  const noter = (msgs) => { msgs.forEach((m) => d.ids.push(m.id)); return msgs; };
+  let premier = null;
+  etape("Envoi sur Discord…");
+  // Premier message : on essaie d'abord le mode connu, puis l'autre si Discord le demande.
+  for (let tentative = 0; tentative < 2 && !premier; tentative++) {
+    const charge = { content: contenuDiscord(d.forum, d.mention, titre, texte, lienSite), allowed_mentions: mentions };
+    if (d.forum) charge.thread_name = titre.slice(0, 100);
+    try { premier = noter(await envoyerLot(charge, lots[0], null))[0]; }
+    catch (e) {
+      if (!(e instanceof ErreurDiscord) || tentative) throw e;
+      if (!d.forum && e.code === 220001) d.forum = true;            // salon Forum : il faut un titre de post
+      else if (d.forum && e.code === 220003) d.forum = false;       // salon classique : pas de post
+      else throw e;
+    }
+  }
+  etat.forum = d.forum; memoire.ecrire("bd_forum", d.forum);
+  if (d.forum) d.fil = premier.channel_id;
+  const guild = etat.infos && etat.infos.guild;
+  d.lien = guild ? "https://discord.com/channels/" + guild + "/" + premier.channel_id + "/" + premier.id : "";
+  etape();
+  for (let i = 1; i < lots.length; i++) {
+    etape("Envoi sur Discord : message " + (i + 1) + " sur " + lots.length + "…");
+    noter(await envoyerLot({ allowed_mentions: { parse: [] } }, lots[i], d.fil));
+    etape();
+  }
+  for (const f of pdfs) {
+    etape("Envoi du PDF d'origine sur Discord…");
+    noter(await envoyerLot({ content: "📎 Version PDF à télécharger", allowed_mentions: { parse: [] } }, [{ blob: f, nom: base + ".pdf" }], d.fil));
+    etape();
+  }
+}
+
+// Appel simple à l'API du webhook (modification, suppression), avec attente si Discord limite le débit.
+async function appelMessage(methode, d, idMessage, corps) {
+  const url = etat.webhook + "/messages/" + idMessage + (d.fil ? "?thread_id=" + d.fil : "");
+  for (let essai = 0; essai < 6; essai++) {
+    let rep;
+    try {
+      rep = await fetch(url, { method: methode, headers: corps ? { "Content-Type": "application/json" } : undefined, body: corps ? JSON.stringify(corps) : undefined });
+    } catch { throw new Error("Connexion à Discord impossible : vérifie ta connexion Internet"); }
+    if (rep.status === 429) {
+      let r = null; try { r = await rep.json(); } catch {}
+      await attendre(((r && r.retry_after) || 2) * 1000 + 250); continue;
+    }
+    return rep;
+  }
+  throw new Error("Discord est surchargé, réessaie dans une minute");
+}
+
+// Efface les messages Discord d'une BD. Renvoie le décompte réel, sans rien prétendre.
+async function effacerDiscord(d, surProgres) {
+  const bilan = { total: d.ids.length, effaces: 0, introuvables: 0, detail: "" };
+  // De la fin vers le début, pour que le titre disparaisse en dernier.
+  for (let k = d.ids.length - 1; k >= 0; k--) {
+    if (surProgres) surProgres(k + 1);
+    const rep = await appelMessage("DELETE", d, d.ids[k]);
+    if (rep.ok) { bilan.effaces++; continue; }
+    let r = null; try { r = await rep.json(); } catch {}
+    bilan.detail = "erreur " + rep.status + (r && r.code ? " / code " + r.code : "") + (r && r.message ? " : " + r.message : "");
+    if (rep.status === 404) { bilan.introuvables++; continue; }
+    throw new Error("Discord a refusé la suppression (" + bilan.detail + "). " + bilan.effaces + " message(s) effacé(s) sur " + bilan.total + ".");
+  }
+  return bilan;
+}
+
+/* ---------- Site (GitHub) ---------- */
+async function gh(methode, chemin, corps, brut) {
+  let rep;
+  try {
+    const entetes = { Authorization: "Bearer " + etat.jeton, Accept: brut ? "application/vnd.github.raw+json" : "application/vnd.github+json" };
+    if (corps) entetes["Content-Type"] = "application/json";
+    rep = await fetch(GH_API + "/repos/" + etat.depot + chemin, { method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined, cache: "no-store" });
+  } catch { throw new Error("Connexion à GitHub impossible : vérifie ta connexion Internet"); }
+  if (!rep.ok) {
+    let r = null; try { r = await rep.json(); } catch {}
+    let txt = "GitHub a répondu une erreur " + rep.status + (r && r.message ? " (" + r.message + ")" : "");
+    if (rep.status === 401) txt = "La clé d'accès GitHub est refusée ou expirée : crée-en une nouvelle dans les Réglages.";
+    else if (rep.status === 403 && r && /rate limit/i.test(r.message || "")) txt = "GitHub limite temporairement les envois : réessaie dans quelques minutes.";
+    else if (rep.status === 403) txt = "La clé d'accès GitHub n'a pas le droit d'écrire dans ce dépôt (permission « Contents : Read and write »).";
+    else if (rep.status === 409) txt = "Le dépôt GitHub est vide : dépose d'abord les fichiers du site dedans.";
+    const e = new Error(txt); e.statut = rep.status; throw e;
+  }
+  if (brut) return rep.text();
+  return rep.status === 204 ? null : rep.json();
+}
+
+// Lit l'état actuel du site : branche, dernier commit et liste des BD.
+async function lireSite() {
+  let depot;
+  try { depot = await gh("GET", ""); }
+  catch (e) { if (e.statut === 404) throw new Error("Dépôt GitHub introuvable : vérifie « pseudo/nom-du-dépôt » et que la clé y donne accès."); throw e; }
+  const branche = depot.default_branch;
+  const ref = await gh("GET", "/git/ref/heads/" + branche);
+  const sha = ref.object.sha;
+  const commit = await gh("GET", "/git/commits/" + sha);
+  let index;
+  try { index = JSON.parse(await gh("GET", "/contents/bd/index.json?ref=" + sha, null, true)); }
+  catch (e) { if (e.statut === 404) index = {}; else if (e instanceof SyntaxError) throw new Error("Le fichier bd/index.json du site est abîmé."); else throw e; }
+  if (!index || typeof index !== "object") index = {};
+  if (!index.site || typeof index.site !== "object") index.site = {};
+  if (!Array.isArray(index.bd)) index.bd = [];
+  return { branche, sha, arbre: commit.tree.sha, index, ecriture: !depot.permissions || depot.permissions.push !== false };
+}
+
+const fichierIndex = (index) => ({ path: "bd/index.json", mode: "100644", type: "blob", content: JSON.stringify(index, null, 1) + "\n" });
+
+// Enregistre des changements sur le site en un seul commit.
+async function ecrireSite(site, entrees, libelle) {
+  const arbre = await gh("POST", "/git/trees", { base_tree: site.arbre, tree: entrees });
+  const commit = await gh("POST", "/git/commits", { message: libelle, tree: arbre.sha, parents: [site.sha] });
+  await gh("PATCH", "/git/refs/heads/" + site.branche, { sha: commit.sha });
+}
+
+function versBase64(blob) {
+  return new Promise((ok, ko) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).slice(String(r.result).indexOf(",") + 1));
+    r.onerror = () => ko(new Error("Lecture du fichier impossible"));
+    r.readAsDataURL(blob);
+  });
+}
+
+function identifiantLibre(base, index) {
+  const pris = new Set(index.bd.map((b) => b.id));
+  if (!pris.has(base)) return base;
+  for (let n = 2; ; n++) if (!pris.has(base + "-" + n)) return base + "-" + n;
+}
+
+/* ---------- Publication ---------- */
+async function publier() {
+  const titre = $("titre").value.trim();
+  const texte = $("texte").value.trim();
+  const dest = destinations();
+  if (!titre || !etat.pages.length || !(dest.site || dest.discord)) return;
+
+  const base = nomDeFichier(titre);
+  const n = etat.pages.length;
+  const chiffres = Math.max(2, String(n).length);
+  const fichiers = etat.pages.map((p, i) => {
+    const num = String(i + 1).padStart(chiffres, "0");
+    return { blob: p.blob, nom: base + "-" + num + "." + p.ext, court: num + "." + p.ext, w: p.w, h: p.h };
+  });
+  const lots = !dest.discord ? [] : (dest.site && etat.couvSeule ? [[fichiers[0]]] : decouper(fichiers));
+  const pdfs = dest.discord && $("joindrePdf").checked ? etat.pdfs.filter((f) => f.size <= MAX_FICHIER) : [];
+  const mention = /^\d{5,25}$/.test(etat.role) ? "<@&" + etat.role + "> " : "";
+
+  occuper(true);
+  const barre = $("barre"); barre.classList.remove("cache");
+  barre.max = (dest.site ? n + 1 : 0) + lots.length + pdfs.length; barre.value = 0;
+  const etape = (txt) => { if (txt) message(txt); else barre.value++; };
+
+  const d = { ids: [], fil: null, forum: etat.forum === true, mention, wh: idWebhook(), lien: "" };
+  let id = "", lienSite = "", arbre = [], siteFait = false;
+  try {
+    if (dest.site) {
+      etape("Connexion au site…");
+      const site = await lireSite();
+      id = identifiantLibre(base, site.index);
+      lienSite = urlSite() + "#/" + id;
+      for (let i = 0; i < n; i++) {
+        etape("Envoi vers le site : page " + (i + 1) + " sur " + n + "…");
+        const b = await gh("POST", "/git/blobs", { content: await versBase64(fichiers[i].blob), encoding: "base64" });
+        arbre.push({ path: "bd/" + id + "/" + fichiers[i].court, mode: "100644", type: "blob", sha: b.sha });
+        etape();
+      }
+    }
+
+    if (dest.discord) await publierSurDiscord(d, titre, texte, lots, pdfs, base, lienSite, etape);
+
+    if (dest.site) {
+      etape("Mise à jour du site…");
+      // On relit le site juste avant d'écrire, au cas où il aurait changé pendant l'envoi.
+      const site = await lireSite();
+      if (site.index.bd.some((b) => b.id === id)) throw new Error("Une BD portant ce nom vient d'être publiée : relance la publication.");
+      site.index.bd.unshift({
+        id, titre, texte, date: new Date().toISOString(),
+        pages: fichiers.map((f) => ({ f: f.court, w: f.w, h: f.h })),
+        discord: d.ids.length ? d : null,
+      });
+      await ecrireSite(site, arbre.concat(fichierIndex(site.index)), "Nouvelle BD : " + titre);
+      siteFait = true; etape();
+    } else {
+      const histo = lireLocal();
+      histo.unshift({ titre, texte, date: Date.now(), pages: n, lien: d.lien, ids: d.ids, fil: d.fil, forum: d.forum, mention: d.mention, wh: d.wh });
+      memoire.ecrire("bd_histo", histo.slice(0, 100));
+    }
+
+    vider(); $("titre").value = ""; $("texte").value = "";
+    const ok = document.createElement("span"); ok.textContent = "✔ « " + titre + " » est publiée. ";
+    if (siteFait) ok.append(lienVers(lienSite, "Voir sur le site"), " (visible d'ici une à deux minutes) ");
+    if (d.lien) ok.append(siteFait ? "· " : "", lienVers(d.lien, "Voir sur Discord"));
+    message(ok, "ok");
+  } catch (e) {
+    let txt = (e && e.message) || "Erreur inconnue";
+    if (e instanceof ErreurDiscord && (e.statut === 404 || e.statut === 401)) txt = "Le webhook Discord n'existe plus : crée-en un nouveau et colle-le dans les Réglages.";
+    let suite = "";
+    if (d.ids.length && dest.site) {
+      // Le site n'a pas été mis à jour : on retire ce qui est parti sur Discord pour ne rien laisser d'orphelin.
+      try { const b = await effacerDiscord(d); suite = " Les " + b.effaces + " message(s) déjà envoyés sur Discord ont été retirés."; }
+      catch { suite = " Attention : " + d.ids.length + " message(s) sont restés sur Discord, à supprimer à la main."; }
+      if (d.forum) suite += " Un post vide peut rester dans le Forum.";
+    } else if (d.ids.length) {
+      const histo = lireLocal();
+      histo.unshift({ titre: titre + " (incomplète)", texte, date: Date.now(), pages: n, lien: d.lien, ids: d.ids, fil: d.fil, forum: d.forum, mention: d.mention, wh: d.wh });
+      memoire.ecrire("bd_histo", histo.slice(0, 100));
+      suite = " " + d.ids.length + " message(s) sont déjà sur Discord : tu peux les supprimer dans « BD publiées ».";
+    }
+    message("Échec de la publication : " + txt + suite, "erreur");
+  } finally {
+    barre.classList.add("cache");
+    occuper(false);
+    chargerHisto();
+  }
+}
+
+/* ---------- BD publiées ---------- */
+// Historique local (mode Discord seul). Les entrées de la toute première version n'ont pas la liste
+// des messages : on retrouve au moins le premier grâce au lien enregistré.
+function lireLocal() {
+  const liste = memoire.lire("bd_histo", null) || [];
+  liste.forEach((h) => {
+    if (h.ids && h.ids.length) return;
+    const m = /\/channels\/\d+\/(\d+)\/(\d+)$/.exec(h.lien || "");
+    if (!m) return;
+    h.ids = [m[2]];
+    h.fil = etat.infos && etat.infos.salon && m[1] !== etat.infos.salon ? m[1] : null;
+    h.forum = !!h.fil;
+    h.ancien = true;
+  });
+  return liste;
+}
+
+let numeroChargement = 0;
+async function chargerHisto() {
+  const numero = ++numeroChargement;
+  if (!siteActif()) {
+    etat.liste = lireLocal().map((h, i) => ({
+      cle: "local-" + i, i, site: false, titre: h.titre, texte: h.texte || "", date: h.date, nb: h.pages, lien: h.lien,
+      d: h.ids && h.ids.length ? { ids: h.ids, fil: h.fil || null, forum: !!h.forum, mention: h.mention || "", wh: h.wh || "" } : null,
+      ancien: !!h.ancien,
+    }));
+    rendreHisto(); return;
+  }
+  try {
+    const site = await lireSite();
+    if (numero !== numeroChargement) return;
+    etat.liste = site.index.bd.map((b) => ({
+      cle: "site-" + b.id, id: b.id, site: true, titre: b.titre, texte: b.texte || "", date: b.date, nb: (b.pages || []).length,
+      lien: urlSite() + "#/" + b.id, d: b.discord && b.discord.ids && b.discord.ids.length ? b.discord : null,
+    }));
+    if (document.activeElement !== $("siteTitre")) $("siteTitre").value = site.index.site.titre || "";
+    if (document.activeElement !== $("siteSous")) $("siteSous").value = site.index.site.sousTitre || "";
+    rendreHisto();
+  } catch (e) {
+    if (numero !== numeroChargement) return;
+    etat.liste = []; rendreHisto();
+    $("carteHisto").classList.remove("cache");
+    infoHisto("Impossible de lire les BD du site : " + ((e && e.message) || "erreur inconnue"), "erreur");
+  }
+}
+
+function rendreHisto() {
+  $("carteHisto").classList.toggle("cache", !etat.liste.length);
+  const ul = $("histo"); ul.textContent = "";
+  etat.liste.forEach((h) => {
+    const li = document.createElement("li");
+    const ligne = document.createElement("div"); ligne.className = "hligne";
+    const gauche = h.lien ? lienVers(h.lien, h.titre) : Object.assign(document.createElement("div"), { textContent: h.titre });
+    const droite = document.createElement("span");
+    const jour = new Date(h.date);
+    droite.textContent = h.nb + " p." + (isNaN(jour) ? "" : " · " + jour.toLocaleDateString("fr-FR"));
+    const actions = document.createElement("span"); actions.className = "hactions";
+    const bouton = (txt, fn, cls) => { const b = document.createElement("button"); b.textContent = txt; if (cls) b.className = cls; b.disabled = etat.occupe; b.onclick = fn; return b; };
+    if (h.site || h.d) {
+      if (!h.ancien) actions.append(bouton("Modifier", () => { etat.edition = etat.edition === h.cle ? "" : h.cle; rendreHisto(); }));
+      actions.append(bouton("Supprimer", () => supprimerBd(h), "suppr"));
+    } else {
+      actions.append(bouton("Retirer de la liste", () => retirerLocal(h)));
+    }
+    ligne.append(gauche, droite, actions); li.append(ligne);
+
+    if (etat.edition === h.cle && (h.site || h.d) && !h.ancien) {
+      const form = document.createElement("div"); form.className = "hform";
+      const t = document.createElement("input"); t.type = "text"; t.maxLength = 100; t.value = h.titre;
+      const x = document.createElement("textarea"); x.value = h.texte; x.maxLength = MAX_TEXTE;
+      const bOk = bouton("Enregistrer la modification", () => modifierBd(h, t.value.trim(), x.value.trim()));
+      form.append(t, x, bOk);
+      if (h.d && h.d.forum) {
+        if (!h.site) { t.disabled = true; }
+        const p = document.createElement("p"); p.className = "aide";
+        p.textContent = "Salon Forum : le titre du post Discord ne se change que dans Discord" + (h.site ? " ; ici, le titre est modifié sur le site." : ".");
+        form.append(p);
+      }
+      li.append(form);
+    }
+    ul.append(li);
+  });
+}
+
+function retirerLocal(h) {
+  const liste = lireLocal(); liste.splice(h.i, 1); memoire.ecrire("bd_histo", liste);
+  chargerHisto();
+}
+
+async function supprimerBd(h) {
+  if (etat.occupe) return;
+  const memeWebhook = h.d && (!h.d.wh || h.d.wh === idWebhook()) && !!etat.webhook;
+  if (!h.site && !memeWebhook) { infoHisto("Cette BD a été publiée avec un autre webhook : elle ne peut être gérée que depuis Discord.", "erreur"); return; }
+  const quoi = [];
+  if (h.site) quoi.push("du site (" + h.nb + " page(s))");
+  if (memeWebhook) quoi.push("de Discord (" + h.d.ids.length + " message(s))");
+  if (!confirm("Supprimer définitivement « " + h.titre + " » " + quoi.join(" et ") + " ?\nC'est irréversible.")) return;
+
+  occuper(true);
+  const bilan = [];
+  try {
+    let discord = null;
+    if (memeWebhook) {
+      discord = await effacerDiscord(h.d, (reste) => infoHisto("Suppression sur Discord… (" + reste + " message(s) restant(s))"));
+      if (discord.effaces) bilan.push(discord.effaces + " message(s) supprimé(s) sur Discord" + (discord.introuvables ? " (" + discord.introuvables + " introuvable(s))" : ""));
+      else bilan.push("rien supprimé sur Discord : il ne trouve aucun des messages (" + discord.detail + ")");
+    } else if (h.d) {
+      bilan.push("messages Discord laissés en place (publiés avec un autre webhook, ou Discord non configuré ici)");
+    }
+
+    if (h.site) {
+      infoHisto("Suppression sur le site…");
+      const site = await lireSite();
+      const bd = site.index.bd.find((b) => b.id === h.id);
+      if (bd) {
+        const entrees = (bd.pages || []).map((p) => ({ path: "bd/" + bd.id + "/" + (typeof p === "string" ? p : p.f), mode: "100644", type: "blob", sha: null }));
+        site.index.bd = site.index.bd.filter((b) => b !== bd);
+        await ecrireSite(site, entrees.concat(fichierIndex(site.index)), "Suppression : " + bd.titre);
+        bilan.push("retirée du site (disparaît d'ici une à deux minutes)");
+      } else bilan.push("déjà absente du site");
+    } else {
+      // Mode Discord seul : on ne retire la ligne que si quelque chose a vraiment été effacé, ou sur demande.
+      if (discord && !discord.effaces && !confirm("Discord ne trouve pas les messages de « " + h.titre + " ».\nRien n'a été supprimé sur Discord.\n\nRetirer quand même cette ligne de la liste ?")) {
+        infoHisto("« " + h.titre + " » : " + bilan.join(" ; ") + ". Supprime-la depuis Discord.", "erreur"); return;
+      }
+      const liste = lireLocal(); liste.splice(h.i, 1); memoire.ecrire("bd_histo", liste);
+    }
+    etat.edition = "";
+    const reste = h.d && h.d.forum && memeWebhook ? " Dans un salon Forum, le post vide peut rester : supprime-le depuis Discord." : "";
+    const partiel = h.ancien && h.nb > 10 ? " BD de l'ancienne version : les messages au-delà de 10 pages restent à supprimer dans Discord." : "";
+    infoHisto("✔ « " + h.titre + " » : " + bilan.join(" ; ") + "." + partiel + reste, discord && !discord.effaces ? "erreur" : "ok");
+  } catch (e) {
+    infoHisto("Suppression interrompue : " + ((e && e.message) || "erreur inconnue") + (bilan.length ? " Déjà fait : " + bilan.join(" ; ") + "." : ""), "erreur");
+  } finally {
+    occuper(false);
+    await chargerHisto();
+  }
+}
+
+async function modifierBd(h, titre, texte) {
+  if (etat.occupe) return;
+  if (!titre) { infoHisto("Le titre ne peut pas être vide.", "erreur"); return; }
+  if (texte.length > MAX_TEXTE) { infoHisto("Le texte est trop long.", "erreur"); return; }
+  const memeWebhook = h.d && (!h.d.wh || h.d.wh === idWebhook()) && !!etat.webhook;
+  if (!h.site && !memeWebhook) { infoHisto("Cette BD a été publiée avec un autre webhook : elle ne peut être gérée que depuis Discord.", "erreur"); return; }
+  occuper(true);
+  const bilan = [];
+  try {
+    if (h.site) {
+      infoHisto("Modification sur le site…");
+      const site = await lireSite();
+      const bd = site.index.bd.find((b) => b.id === h.id);
+      if (!bd) throw new Error("cette BD n'existe plus sur le site");
+      bd.titre = titre; bd.texte = texte;
+      await ecrireSite(site, [fichierIndex(site.index)], "Modification : " + titre);
+      bilan.push("site mis à jour (visible d'ici une à deux minutes)");
+    }
+    if (memeWebhook) {
+      infoHisto("Modification sur Discord…");
+      const contenu = contenuDiscord(h.d.forum, h.d.mention, h.d.forum && !h.site ? h.titre : titre, texte, h.site ? h.lien : "");
+      const rep = await appelMessage("PATCH", h.d, h.d.ids[0], { content: contenu, allowed_mentions: { parse: [] } });
+      if (rep.ok) bilan.push("message Discord mis à jour");
+      else bilan.push(rep.status === 404 ? "message Discord introuvable (non modifié)" : "Discord a refusé la modification (erreur " + rep.status + ")");
+      if (!h.site && rep.ok) {
+        const liste = lireLocal(); const e = liste[h.i];
+        if (e) { if (!h.d.forum) e.titre = titre; e.texte = texte; memoire.ecrire("bd_histo", liste); }
+      }
+    } else if (h.d) bilan.push("message Discord non modifié (autre webhook, ou Discord non configuré ici)");
+    etat.edition = "";
+    infoHisto("✔ « " + titre + " » : " + bilan.join(" ; ") + ".", "ok");
+  } catch (e) {
+    infoHisto("Modification impossible : " + ((e && e.message) || "erreur inconnue") + (bilan.length ? " Déjà fait : " + bilan.join(" ; ") + "." : ""), "erreur");
+  } finally {
+    occuper(false);
+    await chargerHisto();
+  }
+}
+
+/* ---------- Réglages ---------- */
+async function enregistrerReglages() {
+  const info = $("etatReglages");
+  const dire = (txt, couleur) => { info.textContent = txt; info.style.color = couleur ? "var(--" + couleur + ")" : ""; };
+  const url = $("webhook").value.trim().replace(/\?.*$/, "");
+  const role = $("role").value.trim();
+  const depot = $("depot").value.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/i, "").replace(/\/+$/, "");
+  const jeton = $("jeton").value.trim();
+  const titreSite = $("siteTitre").value.trim(), sousSite = $("siteSous").value.trim();
+
+  if (url && !RE_WEBHOOK.test(url)) return dire("L'adresse ne ressemble pas à un webhook Discord.", "rouge");
+  if (role && !/^\d{5,25}$/.test(role)) return dire("L'identifiant du rôle doit être une suite de chiffres.", "rouge");
+  if (!jeton && !url) return dire("Renseigne au moins le webhook Discord, ou le dépôt et la clé GitHub.", "rouge");
+  if (jeton && !RE_DEPOT.test(depot)) return dire("Le dépôt doit être écrit sous la forme pseudo/nom-du-dépôt.", "rouge");
+
+  dire("Vérification…");
+  $("btnEnregistrer").disabled = true;
+  const avant = { depot: etat.depot, jeton: etat.jeton };
+  try {
+    let infos = null;
+    if (url) {
+      let rep; try { rep = await fetch(url); } catch { throw new Error("Connexion à Discord impossible."); }
+      if (!rep.ok) throw new Error("Discord ne reconnaît pas ce webhook : vérifie l'adresse.");
+      const r = await rep.json();
+      infos = { nom: r.name, guild: r.guild_id, salon: r.channel_id };
+    }
+    if (jeton) {
+      etat.depot = depot; etat.jeton = jeton;
+      const site = await lireSite();
+      if (!site.ecriture) throw new Error("Cette clé GitHub n'a pas le droit d'écrire dans le dépôt (permission « Contents : Read and write »).");
+      if ((titreSite || sousSite) && (titreSite !== (site.index.site.titre || "") || sousSite !== (site.index.site.sousTitre || ""))) {
+        site.index.site.titre = titreSite; site.index.site.sousTitre = sousSite;
+        await ecrireSite(site, [fichierIndex(site.index)], "Réglages du site");
+      }
+    } else { etat.depot = ""; etat.jeton = ""; }
+
+    if (url !== etat.webhook) { etat.forum = null; memoire.ecrire("bd_forum", null); }
+    etat.webhook = url; etat.infos = infos; etat.role = role; etat.couvSeule = $("couvSeule").checked;
+    memoire.ecrire("bd_webhook", url); memoire.ecrire("bd_infos", infos); memoire.ecrire("bd_role", role);
+    memoire.ecrire("bd_depot", jeton ? depot : ""); memoire.ecrire("bd_jeton", jeton); memoire.ecrire("bd_couv", etat.couvSeule);
+    dire("✔ Réglages enregistrés.", "vert");
+    majConnexion(); majPages(); chargerHisto();
+    setTimeout(() => $("reglages").classList.add("cache"), 900);
+  } catch (e) {
+    etat.depot = avant.depot; etat.jeton = avant.jeton;
+    dire((e && e.message) || "Vérification impossible.", "rouge");
+  } finally {
+    $("btnEnregistrer").disabled = etat.occupe;
+  }
+}
+
+/* ---------- Branchements ---------- */
+$("btnReglages").onclick = () => $("reglages").classList.toggle("cache");
+$("btnEnregistrer").onclick = enregistrerReglages;
+$("btnVider").onclick = vider;
+$("btnPublier").onclick = publier;
+$("titre").oninput = majBouton;
+$("texte").oninput = majBouton;
+$("optSite").onchange = majBouton;
+$("optDiscord").onchange = majBouton;
+
+const zone = $("zone");
+zone.onclick = () => { if (!etat.occupe) $("fichiers").click(); };
+zone.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); zone.click(); } };
+$("fichiers").onchange = (e) => { ajouterFichiers(e.target.files); e.target.value = ""; };
+["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); zone.classList.add("survol"); }));
+["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); zone.classList.remove("survol"); }));
+document.addEventListener("drop", (e) => { if (e.dataTransfer && e.dataTransfer.files.length) ajouterFichiers(e.dataTransfer.files); });
+
+$("webhook").value = etat.webhook;
+$("role").value = etat.role;
+$("depot").value = etat.depot || depotDetecte();
+$("jeton").value = etat.jeton;
+$("couvSeule").checked = !!etat.couvSeule;
+if (!etat.webhook && !siteActif()) $("reglages").classList.remove("cache");
+majConnexion(); majPages(); chargerHisto();
+</script>
+</body>
+</html>
